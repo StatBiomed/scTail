@@ -8,6 +8,7 @@ import os
 import pandas as pd
 import time 
 import pyranges as pr
+import torch
 
 START_TIME = time.time()
 
@@ -30,7 +31,7 @@ def main():
     help='Number of subprocesses [default: 4]')
 
     group0.add_option('--device','-d',type="int",dest='device',default=0,
-    help='GPU number assigned to use [default: 0]')
+    help='If you are running this program in GPU, this is the card number assigned to use [default: 0]')
 
     group0.add_option('--maxReadCount',type="int",dest='maxReadCount',default=10000,
     help='For each gene, the maxmium read count kept for clustering [default: 10000]')
@@ -103,6 +104,11 @@ def main():
     clusterDistance=options.clusterDistance
     InnerDistance=options.InnerDistance
     device=options.device
+
+
+    # Check if GPU
+    device = options.device if torch.cuda.is_available() else torch.device('cpu')
+    print("[*] Selected device: ", device)
 
 
 

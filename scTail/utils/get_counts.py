@@ -17,6 +17,7 @@ import sys
 from .deep_learning import scDataset, Net,test 
 from scipy import stats
 from torch.utils.data import DataLoader
+from .toolbox import check_pysam_chrom,fetch_reads
 
 
 
@@ -37,7 +38,7 @@ class get_PAS_count():
         self.fastafilePath=fastafilePath
         self.bamfilePath=bamfilePath
         self.outdir=outdir
-        self.count_out_dir=str(outdir)+'/count/'
+        self.count_out_dir=os.path.join(outdir,'count')
         if not os.path.exists(self.count_out_dir):
             os.mkdir(self.count_out_dir)
 
@@ -51,43 +52,39 @@ class get_PAS_count():
         self.clusterDistance=clusterDistance
         self.InnerDistance=InnerDistance
         self.device=device
-        
 
-    
-    def _get_reads(self):
-        # filter reads (standard: cigar and consecutive T or A)
+
+
+    def _do_preprocess(self):
         start_time=time.time()
+
+        filteredbamfilePath=self.filteredbamfilePath
         infile = pysam.AlignmentFile(self.bamfilePath, "rb")
-        outfile = pysam.AlignmentFile(self.filteredbamfilePath, "wb", template=infile)
-
+        outfile = pysam.AlignmentFile(filteredbamfilePath, "wb", template=infile)
         for read in infile:
-            if (read.is_reverse==False)&(read.cigartuples[0][0]==4)&(read.cigartuples[0][1]>=60)&(read.cigartuples[1][0]==0)&(read.cigartuples[1][1]>=5):
-                if re.search('T{6,}',read.query_sequence):
+            if read.get_tag('GX')!='-':
+                if (re.search('T{6,}',read.query_sequence)) and (read.is_reverse==False):
                     outfile.write(read)
-
-            elif (read.is_reverse==True)&(read.cigartuples[-1][0]==4)&(read.cigartuples[-1][1]>=60)&(read.cigartuples[-2][0]==0)&(read.cigartuples[-2][1]>=5):
-                if re.search('A{6,}',read.query_sequence):
+                if (re.search('A{6,}',read.query_sequence)) and (read.is_reverse) :
                     outfile.write(read)
         infile.close()
         outfile.close()
 
         pysam.index(self.filteredbamfilePath)
-        print('filtering spend %.2f min' %((time.time()-start_time)/60))
+        print('filtering reads elapsed %.2f min' %((time.time()-start_time)/60))
+
+        return filteredbamfilePath
 
 
-        #remove PCR duplication 
+
+    def _get_reads(self):
+
         start_time=time.time()
-        UMI_tools_CMD="umi_tools dedup --stdin {} --stdout {} --extract-umi-method=tag --umi-tag=UR --cell-tag=CR".format(self.filteredbamfilePath,self.pcr_removedPath)
-        eprint(UMI_tools_CMD)
-        subprocess.run(UMI_tools_CMD, shell=True,stdout=subprocess.PIPE)
-        print('remove PCR duplication: %.2f min' %((time.time()-start_time)/60))
 
-        #remove internel priming ??
-
-        pysam.index(self.pcr_removedPath)
+        filteredbamfilePath=self._do_preprocess()
 
         #get PolyA site 
-        getreadsFile=pysam.AlignmentFile(self.pcr_removedPath,'rb')
+        getreadsFile=pysam.AlignmentFile(filteredbamfilePath,'rb')
         reads_info=[]
         for read in getreadsFile.fetch(until_eof = True):
             if read.is_reverse:
@@ -110,7 +107,11 @@ class get_PAS_count():
         reads_info_outputPath=os.path.join(self.count_out_dir,'reads_info.tsv')
         finalreadsinfodf.to_csv(reads_info_outputPath,sep='\t')
 
+        print('getting reads elapsed %.2f min' %((time.time()-start_time)/60))
+
         return finalreadsinfodf 
+
+
 
 
     def _do_clustering(self,finalreadsinfodf,geneid):
@@ -176,13 +177,11 @@ class get_PAS_count():
 
 
 
+
     def _filter_false_positive(self):
         start_time=time.time()
         altPASdict=self._do_hierarchial_cluster()
 
-        #used as test
-        with open('/mnt/ruiyanhou/nfs_share2/three_primer/eMSC/get_peak/GSM4506635/count/cluster_peak.pkl','rb') as f:
-            altPASdict=pickle.load(f)
 
         # flatten the cluster (for some genes which include multiple cluster)
         clusterdict={}
@@ -372,7 +371,7 @@ class get_PAS_count():
         finaltwodf=allkeepdf[allkeepdf.duplicated('gene_id',keep=False)] 
         finaltwoadata=adata[:,adata.var.index.isin(finaltwodf['transcript_id'])]  
 
-        sc_output_h5ad=os.path.join(self.count_out_dir+'scPAS_count_two.h5ad')
+        sc_output_h5ad=os.path.join(self.count_out_dir,'scPAS_count_two.h5ad')
         finaltwoadata.write(sc_output_h5ad)
 
         print('produce h5ad Time elapsed %.2f min' %((time.time()-ctime)/60))

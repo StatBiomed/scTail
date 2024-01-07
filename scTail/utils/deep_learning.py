@@ -108,9 +108,14 @@ def evaluate(device,net,dataloader):
 
 
 def test(testdataloader,device,net,pretrained_model_path,save_file):
+    print(device)
     
     #get model
-    check_point=torch.load(pretrained_model_path)
+    if device==torch.device('cpu'):
+        check_point=torch.load(pretrained_model_path,map_location=torch.device('cpu'))
+    else:
+        check_point=torch.load(pretrained_model_path)
+
     net.load_state_dict(check_point['state_dict'])
 
     #get predicted label
