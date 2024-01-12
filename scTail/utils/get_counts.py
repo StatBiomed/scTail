@@ -63,10 +63,7 @@ class get_PAS_count():
         outfile = pysam.AlignmentFile(filteredbamfilePath, "wb", template=infile)
         for read in infile:
             if read.get_tag('GX')!='-':
-                if (re.search('T{6,}',read.query_sequence)) and (read.is_reverse==False):
-                    outfile.write(read)
-                if (re.search('A{6,}',read.query_sequence)) and (read.is_reverse) :
-                    outfile.write(read)
+                outfile.write(read)
         infile.close()
         outfile.close()
 
@@ -82,28 +79,58 @@ class get_PAS_count():
         start_time=time.time()
 
         filteredbamfilePath=self._do_preprocess()
-
-        #get PolyA site 
         getreadsFile=pysam.AlignmentFile(filteredbamfilePath,'rb')
-        reads_info=[]
+        geneidls=[]
         for read in getreadsFile.fetch(until_eof = True):
-            if read.is_reverse:
-                polyA_site_0_based=read.reference_end
-                reads_info.append((read.reference_name,'-',polyA_site_0_based,read.get_tag('CB'),read.get_tag('GX'),read.cigarstring))
-                
-            else:
-                polyA_site_0_based=read.reference_start 
-                reads_info.append((read.reference_name,'+',polyA_site_0_based,read.get_tag('CB'),read.get_tag('GX'),read.cigarstring))
+            geneid=read.get_tag('GX')
+            geneidls.append(geneid)
 
-        readsdf=pd.DataFrame(reads_info,columns=['chr','strand','PAS','cellbarcode','gene_id','cigar'])
-        readsdf=readsdf[readsdf['cellbarcode']!='-']
-        pasdf=readsdf.groupby('gene_id')['PAS'].agg(list).reset_index()
-        cellbarcodedf=readsdf.groupby('gene_id')['cellbarcode'].agg(list).reset_index()
-        mergedf=pasdf.merge(cellbarcodedf,on='gene_id')
-        mergedf['count']=mergedf['PAS'].apply(lambda x: len(x))
+        geneiddf=pd.DataFrame(geneidls,columns=['gene_id'])
+        geneid_uniqdf=geneiddf.drop_duplicates('gene_id')
+
+        mergedf=geneid_uniqdf.merge(self.generefdf,on='gene_id')
         mergedf.set_index('gene_id',inplace=True)
-        finalreadsinfodf=mergedf[(mergedf['count']>self.minCount)&(mergedf['count']<self.maxReadCount)]
 
+
+        geneIDls=[]
+        pasls=[]
+        cellbarcodels=[]
+        for geneid in mergedf.index:
+            geneIDls.append(geneid)
+            #print(geneid)
+            mysamFile='/mnt/ruiyanhou/nfs_share2/three_primer/PBMC/run_STAR/STAR_result/filtered_PBMC_866_for_scTail_rerunAligned.sortedByCoord.out.bam'
+            samFile, _chrom = check_pysam_chrom(mysamFile, str(mergedf.loc[geneid]['Chromosome']))
+            
+            reads = fetch_reads(samFile, _chrom,  mergedf.loc[geneid]['Start'] , mergedf.loc[geneid]['End'],  trimLen_max=100)
+            reads1_umi = reads["reads1"]
+            reads1_umi=[r for r in reads1_umi if r.get_tag('GX')==geneid]
+
+            if mergedf.loc[geneid]['Strand']=='+':
+                reads1_umi=[r for r in reads1_umi if r.is_reverse==False]
+                reads1_umi=[r for r in reads1_umi if re.search('T{6,}', r.query_sequence)]
+                polyA_site_0_based=[r.reference_start for r in reads1_umi]
+                cellbarcode=[r.get_tag('CB') for r in reads1_umi]
+                pasls.append(polyA_site_0_based)
+                cellbarcodels.append(cellbarcode)
+                
+            elif mergedf.loc[geneid]['Strand']=='-':
+                reads1_umi=[r for r in reads1_umi if r.is_reverse==True]
+                reads1_umi=[r for r in reads1_umi if re.search('A{6,}', r.query_sequence)]
+                polyA_site_0_based=[r.reference_end for r in reads1_umi]
+                cellbarcode=[r.get_tag('CB') for r in reads1_umi]
+                pasls.append(polyA_site_0_based)
+                cellbarcodels.append(cellbarcode)
+
+        readsinfodict={}
+        readsinfodict['gene_id']=geneIDls
+        readsinfodict['PAS']=pasls
+        readsinfodict['cellbarcode']=cellbarcodels
+
+        readsinfodf=pd.DataFrame(readsinfodict)
+        readsinfodf['count']=readsinfodf['PAS'].apply(lambda x: len(x))
+        finalreadsinfodf=readsinfodf[(readsinfodf['count']>self.minCount)&(readsinfodf['count']<self.maxReadCount)]
+
+        finalreadsinfodf.set_index('gene_id',inplace=True)
         reads_info_outputPath=os.path.join(self.count_out_dir,'reads_info.tsv')
         finalreadsinfodf.to_csv(reads_info_outputPath,sep='\t')
 
