@@ -18,7 +18,8 @@ from .deep_learning import scDataset, Net,test
 from scipy import stats
 from torch.utils.data import DataLoader
 from .toolbox import check_pysam_chrom,fetch_reads
-
+from sklearn.neighbors import KernelDensity
+import racplusplus
 
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -77,9 +78,17 @@ class get_PAS_count():
     def _get_reads(self):
 
         start_time=time.time()
-
         filteredbamfilePath=self._do_preprocess()
-        getreadsFile=pysam.AlignmentFile(filteredbamfilePath,'rb')
+
+        pcr_removedPath=os.path.join(self.count_out_dir,'pcr_removed.bam')
+        start_time=time.time()
+        UMI_tools_CMD="umi_tools dedup --stdin {} --stdout {} --extract-umi-method=tag --umi-tag=UR --cell-tag=CR".format(filteredbamfilePath,pcr_removedPath)
+        eprint(UMI_tools_CMD)
+        subprocess.run(UMI_tools_CMD, shell=True,stdout=subprocess.PIPE)
+        print('remove PCR duplication: %.2f min' %((time.time()-start_time)/60))
+
+
+        getreadsFile=pysam.AlignmentFile(pcr_removedPath,'rb')
         geneidls=[]
         for read in getreadsFile.fetch(until_eof = True):
             geneid=read.get_tag('GX')
@@ -93,45 +102,92 @@ class get_PAS_count():
 
 
         geneIDls=[]
-        pasls=[]
+        reads1_POS_ls=[]
         cellbarcodels=[]
         for geneid in mergedf.index:
             geneIDls.append(geneid)
+
             #print(geneid)
-            mysamFile='/mnt/ruiyanhou/nfs_share2/three_primer/PBMC/run_STAR/STAR_result/filtered_PBMC_866_for_scTail_rerunAligned.sortedByCoord.out.bam'
+            mysamFile=filteredbamfilePath
             samFile, _chrom = check_pysam_chrom(mysamFile, str(mergedf.loc[geneid]['Chromosome']))
             
             reads = fetch_reads(samFile, _chrom,  mergedf.loc[geneid]['Start'] , mergedf.loc[geneid]['End'],  trimLen_max=100)
-            reads1_umi = reads["reads1"]
+            reads1_umi = reads["reads1u"]
             reads1_umi=[r for r in reads1_umi if r.get_tag('GX')==geneid]
 
             if mergedf.loc[geneid]['Strand']=='+':
                 reads1_umi=[r for r in reads1_umi if r.is_reverse==False]
-                reads1_umi=[r for r in reads1_umi if re.search('T{6,}', r.query_sequence)]
-                polyA_site_0_based=[r.reference_start for r in reads1_umi]
+                reads1_POS=[r.reference_end for r in reads1_umi]
                 cellbarcode=[r.get_tag('CB') for r in reads1_umi]
-                pasls.append(polyA_site_0_based)
+                reads1_POS_ls.append(reads1_POS)
                 cellbarcodels.append(cellbarcode)
                 
             elif mergedf.loc[geneid]['Strand']=='-':
                 reads1_umi=[r for r in reads1_umi if r.is_reverse==True]
-                reads1_umi=[r for r in reads1_umi if re.search('A{6,}', r.query_sequence)]
-                polyA_site_0_based=[r.reference_end for r in reads1_umi]
+                reads1_POS=[r.reference_start for r in reads1_umi]
                 cellbarcode=[r.get_tag('CB') for r in reads1_umi]
-                pasls.append(polyA_site_0_based)
+                reads1_POS_ls.append(reads1_POS)
                 cellbarcodels.append(cellbarcode)
 
         readsinfodict={}
         readsinfodict['gene_id']=geneIDls
-        readsinfodict['PAS']=pasls
+        readsinfodict['reads1']=reads1_POS_ls
         readsinfodict['cellbarcode']=cellbarcodels
 
         readsinfodf=pd.DataFrame(readsinfodict)
-        readsinfodf['count']=readsinfodf['PAS'].apply(lambda x: len(x))
+        readsinfodf['count']=readsinfodf['reads1'].apply(lambda x: len(x))
         finalreadsinfodf=readsinfodf[(readsinfodf['count']>self.minCount)&(readsinfodf['count']<self.maxReadCount)]
 
+        #get the PAS of genes which only have one transcript
+        trained_pas_path=str(Path(os.path.dirname(os.path.abspath(__file__))).parents[0])+'/model/human_hg38_gene_withone_PAS.tsv'
+        trainedpasdf=pd.read_csv(trained_pas_path,delimiter='\t')
+        trainedpasdf['gene_id']=trainedpasdf['gene_id'].str.split('.',expand=True)[0]
+        finalreadsinfodf['gene_id']=finalreadsinfodf['gene_id'].str.split('.',expand=True)[0]
+        print(trainedpasdf)
+        print(finalreadsinfodf)
+        trainedfulldf=finalreadsinfodf.merge(trainedpasdf,on='gene_id')
+        trainedfulldf.set_index('gene_id',inplace=True)
+        print(trainedfulldf)
+
+        #get the distance between reads and PAS for these genes 
+        distancedict={}
+        for geneid in trainedfulldf.index:
+            distancels=[]
+            for i in range(0,len(trainedfulldf.loc[geneid]['reads1'])):
+                if trainedfulldf.loc[geneid]['strand']=='+':
+                    distance=trainedfulldf.loc[geneid]['PAS']-trainedfulldf.loc[geneid]['reads1'][i]
+                elif trainedfulldf.loc[geneid]['strand']=='-':
+                    distance=trainedfulldf.loc[geneid]['reads1'][i]-trainedfulldf.loc[geneid]['PAS']
+                distancels.append(distance)
+            distancedict[geneid]=distancels
+
+        #print(distancedict)
+
+        trainedfulldf['distance']=distancedict
+        train_dataset_Path=os.path.join(self.count_out_dir,'used_for_train_dataset.tsv')
+        trainedfulldf.to_csv(train_dataset_Path,sep='\t',index=None)
+
+
+        # use gaussian kernel function to estimate the distribution density
+        flattenls=[j for i in trainedfulldf['distance'] for j in i ]
+        distancenp=np.array(flattenls).reshape([-1,1])
+        selectnp=distancenp[distancenp<2000].reshape(-1,1)
+        kde = KernelDensity(kernel='gaussian', bandwidth=1).fit(selectnp)
+
+        x_range = np.linspace(0,2000, num=2000)
+        log_density = kde.score_samples(x_range.reshape(-1,1))
+
+        fragmentLen=np.argmax(log_density)
+        print("The predicted fragment length is %i"%fragmentLen)
+
         finalreadsinfodf.set_index('gene_id',inplace=True)
-        reads_info_outputPath=os.path.join(self.count_out_dir,'reads_info.tsv')
+        corrected_reads1dict={}
+        for geneid in finalreadsinfodf.index:
+            reads1=finalreadsinfodf.loc[geneid]['reads1']
+            corrected_reads1dict[geneid]=[ele+fragmentLen for ele in reads1]
+        finalreadsinfodf['corrected_reads1']=corrected_reads1dict
+
+        reads_info_outputPath=os.path.join(self.count_out_dir,'corrected_reads_info.tsv')
         finalreadsinfodf.to_csv(reads_info_outputPath,sep='\t')
 
         print('getting reads elapsed %.2f min' %((time.time()-start_time)/60))
@@ -143,11 +199,18 @@ class get_PAS_count():
 
     def _do_clustering(self,finalreadsinfodf,geneid):
 
+
+
+
+        
+
         # do hierarchical cluster
         clusterModel = AgglomerativeClustering(n_clusters=None,linkage='average',distance_threshold=self.InnerDistance)
 
-        posiarray=np.array(finalreadsinfodf['PAS'][geneid]).reshape(-1,1)
+        posiarray=np.array(finalreadsinfodf['corrected_reads1'][geneid]).reshape(-1,1)
+        #print(posiarray)
         CBarray=np.array(finalreadsinfodf['cellbarcode'][geneid]).reshape(-1,1)
+        #print(CBarray)
 
         clusterModel=clusterModel.fit(posiarray)
         #print('finish clustering fit')
@@ -241,7 +304,7 @@ class get_PAS_count():
         test_loader = DataLoader(test_set, batch_size=1, shuffle=False)
 
         net=Net().to(self.device)
-        pretrained_model_path=pathstr=str(Path(os.path.dirname(os.path.abspath(__file__))).parents[0])+'/model/model_last.pth'
+        pretrained_model_path=str(Path(os.path.dirname(os.path.abspath(__file__))).parents[0])+'/model/model_last.pth'
         predict_result_output=os.path.join(self.count_out_dir,'predict_result.tsv')
         positivedf=test(test_loader,self.device,net,pretrained_model_path,predict_result_output)
 
