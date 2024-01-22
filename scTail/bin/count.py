@@ -111,9 +111,11 @@ def main():
     print("[*] Selected device: ", device)
 
 
+    
 
     getTSScount=get_PAS_count(PASrefpath,generefpath,fasta_file,bam_file,out_dir,n_proc,minCount,maxReadCount,clusterDistance,InnerDistance,device)
-    scadata=getTSScount.produce_sclevel()
+    #scadata=getTSScount.produce_sclevel()
+    scadata=getTSScount.get_count_h5ad()
     
 
 
