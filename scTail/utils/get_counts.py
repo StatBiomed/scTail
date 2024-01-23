@@ -306,14 +306,21 @@ class get_PAS_count():
         subprocess.run(featureCount_CMD, shell=True,stdout=subprocess.PIPE)
 
         umi_tools_input=os.path.join(self.count_out_dir,'pcr_duplication_removed.bam.featureCounts.bam')
+        sort_output=os.path.join(self.count_out_dir,'featurecount_sorted.bam')
         umi_tools_output=os.path.join(self.count_out_dir,'umitools_output')
 
-        samtools_index_CMD="samtools index -@ {} {}".format(self.nproc,umi_tools_input)
+
+        samtools_index_CMD="samtools sort -@ {} {} > {}".format(self.nproc,umi_tools_input,sort_output)
         eprint(samtools_index_CMD)
         subprocess.run(samtools_index_CMD,shell=True,stdout=subprocess.PIPE)
 
 
-        umi_tools_CMD="umi_tools count --extract-umi-method=tag --umi-tag=UB --cell-tag=CB --per-gene --gene-tag=XT --assigned-status-tag=XS --per-cell --wide-format-cell-counts -I {} -S {}".format(umi_tools_input,umi_tools_output)
+        samtools_index_CMD="samtools index -@ {} {}".format(self.nproc,sort_output)
+        eprint(samtools_index_CMD)
+        subprocess.run(samtools_index_CMD,shell=True,stdout=subprocess.PIPE)
+
+
+        umi_tools_CMD="umi_tools count --extract-umi-method=tag --umi-tag=UB --cell-tag=CB --per-gene --gene-tag=XT --assigned-status-tag=XS --per-cell --wide-format-cell-counts -I {} -S {}".format(sort_output,umi_tools_output)
         eprint(umi_tools_CMD)
         subprocess.run(umi_tools_CMD, shell=True,stdout=subprocess.PIPE)
 
