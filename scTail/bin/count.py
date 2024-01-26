@@ -19,6 +19,7 @@ def main():
     parser.add_option('--fasta','-f',dest='fasta',default=None,help='The reference genome file') 
     parser.add_option('--bam','-b',dest='bam_file',default=None,help='The bam file of aligned from STAR or other single cell aligned software.')
     parser.add_option('--outdir','-o',dest='out_dir',default=None,help='The directory for output [default : $bam_file]') 
+    parser.add_option('--chromoSize','-c',dest='chromoSize',default=None,help='The file which includes chromosome length')
  
    
    
@@ -69,6 +70,12 @@ def main():
         sys.exit(1)
 
 
+    # chromosome size
+    if options.chromoSize is None:
+        print("Error: Need --chromoSize for chromosome size")
+
+
+
     #output file 
     if options.out_dir is None:
         print("Warning: no outDir provided, we use $bamfilePath/scTail\n")
@@ -104,6 +111,7 @@ def main():
     clusterDistance=options.clusterDistance
     InnerDistance=options.InnerDistance
     device=options.device
+    chromoSizePath=options.chromoSize
 
 
     # Check if GPU
@@ -113,9 +121,9 @@ def main():
 
     
 
-    getTSScount=get_PAS_count(PASrefpath,generefpath,fasta_file,bam_file,out_dir,n_proc,minCount,maxReadCount,clusterDistance,InnerDistance,device)
+    getTSScount=get_PAS_count(PASrefpath,generefpath,fasta_file,bam_file,out_dir,n_proc,minCount,maxReadCount,clusterDistance,InnerDistance,device,chromoSizePath)
     #scadata=getTSScount.produce_sclevel()
-    scadata=getTSScount.get_count_h5ad()
+    scadata=getTSScount._filter_false_positive()
     
 
 

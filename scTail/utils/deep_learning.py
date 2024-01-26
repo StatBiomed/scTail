@@ -6,7 +6,7 @@ import pyranges as pr
 from tqdm import tqdm
 from torch.utils.data import DataLoader
 from torch.utils.data import Dataset
-from kipoiseq.transforms.functional import one_hot
+from kipoiseq.transforms.functional import one_hot_dna
 import numpy as np
 import torch
 import torch.nn as nn
@@ -16,14 +16,33 @@ import torch.nn as nn
 
 
 class scDataset(Dataset):
-    def __init__(self,ref_fastq,bed):
+    def __init__(self,ref_fastq,bed,chromosizedf):
         
         #read bed file
         genes=Fasta(ref_fastq)
         bedfile=pd.read_csv(bed,delimiter='\t')
+        print(len(bedfile))
+
+
+
+
+
+
         bedfile['start']=bedfile['PAS']-100
         bedfile['end']=bedfile['PAS']+100
-        
+
+        #filter to make sure get interger sequence
+        bedfile=bedfile[bedfile['start']>1]
+
+        chromosizedf.reset_index(inplace=True)
+        chromosizedf.columns=['Chromosome','length']
+        bedfile=bedfile.merge(chromosizedf,on='Chromosome')
+        bedfile=bedfile[bedfile['PAS']+100 < bedfile['length']]
+        bedfile.reset_index(inplace=True,drop=True)
+        print(len(bedfile))
+
+
+
         #extract sequence and do one-hot encoding 
         onehotls=[]
         for chrom, start, end, strand in tqdm(bedfile[['Chromosome','start','end','Strand']].values,desc='Loading Loci'):
@@ -32,8 +51,12 @@ class scDataset(Dataset):
             else:
                 seq_=genes.get_seq(chrom,start+1,end,rc=True).seq
 
-            onehotnp=one_hot(seq_,['A','C','T','G'])
-            onehotls.append(onehotnp)
+            onehotnp=one_hot_dna(seq_, ['A','C','G','T'])
+
+            if onehotnp.shape[0]==200:
+                onehotls.append(onehotnp)
+
+            
             
         
         # get corresponding X value 
@@ -48,7 +71,9 @@ class scDataset(Dataset):
     def __getitem__(self,index):
 
         seq=np.transpose(self.combine_array[index]).astype(np.float32)
+        print(seq)
         PAS_name=self.gene_id[index]
+        print(PAS_name)
         
         sample = {"seq": seq,'PAS_name':PAS_name}
         return sample
@@ -93,7 +118,7 @@ def evaluate(device,net,dataloader):
     y_scorels=[]
     with torch.no_grad():
         for data in dataloader:
-            seq=data['seq'].to(device,dtype=torch.float)
+            seq=data['seq'].to(device)
             output=net(seq)
             #print(output)
             preds = torch.argmax(output, 1)
@@ -109,13 +134,11 @@ def evaluate(device,net,dataloader):
 
 def test(testdataloader,device,net,pretrained_model_path,save_file):
     print(device)
-    
-    #get model
-    if device==torch.device('cpu'):
-        check_point=torch.load(pretrained_model_path,map_location=torch.device('cpu'))
-    else:
-        check_point=torch.load(pretrained_model_path)
 
+    #os.environ["CUDA_VISIBLE_DEVICES"] = str(device)
+    
+
+    check_point=torch.load(pretrained_model_path,map_location=torch.device(device))
     net.load_state_dict(check_point['state_dict'])
 
     #get predicted label
