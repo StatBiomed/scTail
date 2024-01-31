@@ -21,7 +21,7 @@ class scDataset(Dataset):
         #read bed file
         genes=Fasta(ref_fastq)
         bedfile=pd.read_csv(bed,delimiter='\t')
-        print(len(bedfile))
+        #print(len(bedfile))
 
 
 
@@ -39,7 +39,7 @@ class scDataset(Dataset):
         bedfile=bedfile.merge(chromosizedf,on='Chromosome')
         bedfile=bedfile[bedfile['PAS']+100 < bedfile['length']]
         bedfile.reset_index(inplace=True,drop=True)
-        print(len(bedfile))
+        #print(len(bedfile))
 
 
 
@@ -52,9 +52,7 @@ class scDataset(Dataset):
                 seq_=genes.get_seq(chrom,start+1,end,rc=True).seq
 
             onehotnp=one_hot_dna(seq_, ['A','C','G','T'])
-
-            if onehotnp.shape[0]==200:
-                onehotls.append(onehotnp)
+            onehotls.append(onehotnp)
 
             
             
@@ -71,9 +69,9 @@ class scDataset(Dataset):
     def __getitem__(self,index):
 
         seq=np.transpose(self.combine_array[index]).astype(np.float32)
-        print(seq)
+        #print(seq)
         PAS_name=self.gene_id[index]
-        print(PAS_name)
+        #print(PAS_name)
         
         sample = {"seq": seq,'PAS_name':PAS_name}
         return sample

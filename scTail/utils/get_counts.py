@@ -90,7 +90,7 @@ class get_PAS_count():
         for chr in self.chromosizedf.index:
             samFile, _chrom = check_pysam_chrom(bamFile, str(chr))
             reads = fetch_reads(samFile, _chrom,  0 , self.chromosizedf.loc[chr][1],  trimLen_max=100)
-            reads1_umi = reads["reads1u"]
+            reads1_umi = reads["reads2"]
 
             forwardReads1=[r for r in reads1_umi if r.is_reverse==False]
             reverseReads1=[r for r in reads1_umi if r.is_reverse==True]
