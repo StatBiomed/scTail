@@ -85,15 +85,14 @@ class get_PAS_count():
         start_time=time.time()
         bamFile=self.bamfilePath
 
-
         allchrls=[]
         for chr in self.chromosizedf.index:
             samFile, _chrom = check_pysam_chrom(bamFile, str(chr))
             reads = fetch_reads(samFile, _chrom,  0 , self.chromosizedf.loc[chr][1],  trimLen_max=100)
             reads1_umi = reads["reads2"]
 
-            forwardReads1=[r for r in reads1_umi if r.is_reverse==False]
-            reverseReads1=[r for r in reads1_umi if r.is_reverse==True]
+            forwardReads1=[r for r in reads1_umi if r.is_reverse==True]
+            reverseReads1=[r for r in reads1_umi if r.is_reverse==False]
 
             reads1_PAS_forward=[r.reference_end for r in forwardReads1]
             reads1_PAS_reverse=[r.reference_start for r in reverseReads1]
@@ -111,10 +110,12 @@ class get_PAS_count():
             onechrdf['chr']=chr
             allchrls.append(onechrdf)
 
+
         paracluinputdf=pd.concat(allchrls,axis=0)
         paracluinputdf=paracluinputdf[['chr','strand','pos','count']]
         paracluinputdf.sort_values(['chr','strand','pos'],inplace=True)
         paracluinputdf['pos']=paracluinputdf['pos'].astype('int')
+
         paraclu_inputPath=os.path.join(self.count_out_dir,'paraclu_input.tsv')
         paracluinputdf.to_csv(paraclu_inputPath,sep='\t',header=None,index=None)
 

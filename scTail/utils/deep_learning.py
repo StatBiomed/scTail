@@ -51,7 +51,7 @@ class scDataset(Dataset):
             else:
                 seq_=genes.get_seq(chrom,start+1,end,rc=True).seq
 
-            onehotnp=one_hot_dna(seq_, ['A','C','G','T'])
+            onehotnp=one_hot_dna(seq_, ['A','C','T','G'])
             onehotls.append(onehotnp)
 
             
