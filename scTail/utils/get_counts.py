@@ -187,6 +187,57 @@ class get_PAS_count():
 
 
 
+    def assign_reads():
+        start_time=time.time()
+
+
+            samFile, _chrom = check_pysam_chrom(bamFile, str(chr))
+            reads = fetch_reads(samFile, _chrom,  0 , self.chromosizedf.loc[chr][1],  trimLen_max=100)
+            reads1_umi = reads["reads2"]
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     def get_count_h5ad(self):
 
         ctime=time.time()
@@ -194,7 +245,7 @@ class get_PAS_count():
         featureCount_inputPath=self._filter_false_positive()
         featureCount_outputPath=os.path.join(self.count_out_dir,'featureCount_output')
 
-        featureCount_CMD="featureCounts -a {} -o {} -F SAF -R BAM {} -T {}".format(featureCount_inputPath,featureCount_outputPath,self.pcr_removedPath,self.nproc)
+        featureCount_CMD="featureCounts -a {} -o {} -F SAF -R BAM {} -T {}".format(featureCount_inputPath,featureCount_outputPath,self.bamfilePath,self.nproc)
         eprint(featureCount_CMD)
         subprocess.run(featureCount_CMD, shell=True,stdout=subprocess.PIPE)
 
