@@ -23,6 +23,7 @@ import racplusplus
 from collections import Counter
 import matplotlib.pyplot as plt
 import random 
+from scipy.sparse import csr_matrix
 
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -420,203 +421,16 @@ class get_PAS_count():
         vardf.set_index('cluster_id',inplace=True,drop=True)
         adata.var=vardf
 
+        nonzero_indices = np.nonzero(adata.X)
+        nonzero_values = adata.X[nonzero_indices]
+        sparse_matrix = csr_matrix((nonzero_values, nonzero_indices), shape=adata.X.shape)
+        adata.X=sparse_matrix
+
 
         allcluster_adata_path=os.path.join(self.count_out_dir,'all_cluster.h5ad')
         adata.write(allcluster_adata_path)
 
         return adata
-
-
-
-
-        
-
-
-
-
-
-
-
-
-
-
-
-                
-        
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            
- 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    def get_count_h5ad(self):
-
-        ctime=time.time()
-
-        featureCount_inputPath=self._filter_false_positive()
-        featureCount_outputPath=os.path.join(self.count_out_dir,'featureCount_output')
-
-        featureCount_CMD="featureCounts -a {} -o {} -F SAF -R BAM {} -T {}".format(featureCount_inputPath,featureCount_outputPath,self.bamfilePath,self.nproc)
-        eprint(featureCount_CMD)
-        subprocess.run(featureCount_CMD, shell=True,stdout=subprocess.PIPE)
-
-        umi_tools_input=os.path.join(self.count_out_dir,'pcr_duplication_removed.bam.featureCounts.bam')
-        sort_output=os.path.join(self.count_out_dir,'featurecount_sorted.bam')
-        umi_tools_output=os.path.join(self.count_out_dir,'umitools_output')
-
-
-        samtools_index_CMD="samtools sort -@ {} {} > {}".format(self.nproc,umi_tools_input,sort_output)
-        eprint(samtools_index_CMD)
-        subprocess.run(samtools_index_CMD,shell=True,stdout=subprocess.PIPE)
-
-
-        samtools_index_CMD="samtools index -@ {} {}".format(self.nproc,sort_output)
-        eprint(samtools_index_CMD)
-        subprocess.run(samtools_index_CMD,shell=True,stdout=subprocess.PIPE)
-
-
-        umi_tools_CMD="umi_tools count --extract-umi-method=tag --umi-tag=UB --cell-tag=CB --per-gene --gene-tag=XT --assigned-status-tag=XS --per-cell --wide-format-cell-counts -I {} -S {}".format(sort_output,umi_tools_output)
-        eprint(umi_tools_CMD)
-        subprocess.run(umi_tools_CMD, shell=True,stdout=subprocess.PIPE)
-
-        umitoolsdf=pd.read_csv(umi_tools_output,delimiter='\t',index_col=0)
-        umitoolsdfT=umitoolsdf.T 
-        adata=ad.AnnData(umitoolsdfT)
-
-        adata_output=os.path.join(self.count_out_dir,'allAPA.h5ad')
-        adata.write(adata_output)
-
-        print('produce h5ad Time elapsed %.2f min' %((time.time()-ctime)/60))
-
-        return adata
-
-
-
-
-
-
-
-
-
-    
-
-
-
-
-
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
