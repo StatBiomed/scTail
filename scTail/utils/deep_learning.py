@@ -24,10 +24,6 @@ class scDataset(Dataset):
         #print(len(bedfile))
 
 
-
-
-
-
         bedfile['start']=bedfile['PAS']-100
         bedfile['end']=bedfile['PAS']+100
 
