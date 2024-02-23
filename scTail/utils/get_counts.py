@@ -36,13 +36,14 @@ def eprint(*args, **kwargs):
 
 
 class get_PAS_count():
-    def __init__(self,PASrefPath,generefPath,fastafilePath,bamfilePath,outdir,nproc,minCount,maxReadCount,clusterDistance,InnerDistance,device,chromoSizePath):
+    def __init__(self,PASrefPath,generefPath,fastafilePath,bamfilePath,outdir,nproc,minCount,maxReadCount,clusterDistance,InnerDistance,device,chromoSizePath,reads2bamPath):
     
         self.PASrefdf=pd.read_csv(PASrefPath,delimiter='\t')
         self.generefdf=pd.read_csv(generefPath,delimiter='\t')
         self.chromosizedf=pd.read_csv(chromoSizePath,delimiter='\t',header=None,index_col=0)
         self.fastafilePath=fastafilePath
         self.bamfilePath=bamfilePath
+        self.reads2bamPath=reads2bamPath
         self.outdir=outdir
         self.count_out_dir=os.path.join(outdir,'count')
         if not os.path.exists(self.count_out_dir):
@@ -58,6 +59,7 @@ class get_PAS_count():
         self.clusterDistance=clusterDistance
         self.InnerDistance=InnerDistance
         self.device=device
+
 
 
 
@@ -90,12 +92,17 @@ class get_PAS_count():
 
         allchrls=[]
         for chr in self.chromosizedf.index:
+            print(chr)
             samFile, _chrom = check_pysam_chrom(bamFile, str(chr))
             reads = fetch_reads(samFile, _chrom,  0 , self.chromosizedf.loc[chr][1],  trimLen_max=100)
-            reads1_umi = reads["reads2"]
+            reads1_umi = reads["reads1"]   
+
 
             forwardReads1=[r for r in reads1_umi if r.is_reverse==True]
             reverseReads1=[r for r in reads1_umi if r.is_reverse==False]
+
+            #reads2_umi=reads['reads1']
+
 
             reads1_PAS_forward=[r.reference_end for r in forwardReads1]
             reads1_PAS_reverse=[r.reference_start for r in reverseReads1]
@@ -112,6 +119,7 @@ class get_PAS_count():
             onechrdf=pd.concat([forwarddf,reversedf],axis=0)
             onechrdf['chr']=chr
             allchrls.append(onechrdf)
+            print(allchrls)
 
 
         paracluinputdf=pd.concat(allchrls,axis=0)
@@ -204,32 +212,50 @@ class get_PAS_count():
 
             samFile, _chrom = check_pysam_chrom(self.bamfilePath, row['Chromosome'])
             reads = fetch_reads(samFile, _chrom,  row['Start'], row['End'],  trimLen_max=100)            
-            reads1_paired=reads['reads2']
-            reads2_paired=reads['reads1']
+            reads1_paired=reads['reads1']
+            reads2_paired=reads['reads2']
+
 
             reads1_paired=[r for r in reads1_paired if r.get_tag('GX')==row['gene_id']]
             reads2_paired=[r for r in reads2_paired if r.get_tag('GX')==row['gene_id']]
+
+
+            # print(reads1_paired)
+            # print(reads2_paired)
+
+
 
             if row['Strand']=='+':
                 reads1_paired=[r for r in reads1_paired if r.is_reverse==True]
                 reads2_paired=[r for r in reads2_paired if r.is_reverse==False]
                 
+
+                # print(reads1_paired)
+                # print(reads2_paired)
+
+
                 reads1_pas=[r.reference_end for r in reads1_paired]
                 reads2_pas=[r.reference_end for r in reads2_paired]
                 fragment_size=[reads1_pas[i]-reads2_pas[i] for i in range(0,len(reads1_pas))]
+                # print(fragment_size)
         
             elif row['Strand']=='-':
                 reads1_paired=[r for r in reads1_paired if r.is_reverse==False]
                 reads2_paired=[r for r in reads2_paired if r.is_reverse==True]
 
+
+                # print(reads1_paired)
+                # print(reads2_paired)
+
                 reads1_pas=[r.reference_start for r in reads1_paired]
                 reads2_pas=[r.reference_start for r in reads2_paired]
                 fragment_size=[reads2_pas[i]-reads1_pas[i] for i in range(0,len(reads1_pas))]
+                # print(fragment_size)
 
             fragmentsizels.append(fragment_size)
 
 
-
+        # print(fragmentsizels)
         fragment_flattenls=[j for i in fragmentsizels for j in i]
         filtered_fragment=[i for i in fragment_flattenls if (i<500)&(i>0)]
         [shape_fit,location_fit,scale_fit]=stats.lognorm.fit(filtered_fragment)
@@ -262,22 +288,17 @@ class get_PAS_count():
         strand=list(selectdf['gene_strand'])[0]
             
             
-        samFile, _chrom = check_pysam_chrom(self.bamfilePath, gene_chr)
+        samFile, _chrom = check_pysam_chrom(self.reads2bamPath, gene_chr)
         reads = fetch_reads(samFile, _chrom, gene_start, gene_end,  trimLen_max=100)
 
-        reads2_paired=reads['reads1']
-        reads2_unique=reads['reads1u']
+        reads2=reads['reads1u']
 
-        reads2_paired=[r for r in reads2_paired if r.get_tag('GX')==geneid]
-        reads2_unique=[r for r in reads2_unique if r.get_tag('GX')==geneid]
-        reads2=reads2_paired+reads2_unique
+
+        reads2=[r for r in reads2 if r.get_tag('GX')==geneid]
+
 
         if len(reads2)>self.maxReadCount:
             reads2=random.sample(reads2,10000)
-
-
-
-
 
 
         pas_output_ls=[]
@@ -355,14 +376,16 @@ class get_PAS_count():
 
     
     def assign_reads2(self):
-        shape_fit, location_fit, scale_fit=self._fit_lognormal()
+        
         # print(shape_fit)
         # print(location_fit)
         # print(scale_fit)
 
-
+        shape_fit, location_fit, scale_fit=self._fit_lognormal()
 
         positive_bed_path=self._filter_false_positive()
+
+        
 
 
         cutoff_x=np.linspace(0,500,500)
