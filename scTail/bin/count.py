@@ -38,11 +38,13 @@ def main():
     group0.add_option('--maxReadCount',type="int",dest='maxReadCount',default=10000,
     help='For each gene, the maxmium read count kept for clustering [default: 10000]')
     
-    group0.add_option('--clusterDistance',type="float",dest='clusterDistance',default=300,
-    help="The minimum distance between two cluster transcription start site [default: 300]")
+    group0.add_option('--densityFC',type="float",dest='densityFC',default=0,
+    help="Minimum value for maximum density / minimum density [default: 0]")
 
     group0.add_option('--InnerDistance',type="float",dest='InnerDistance',default=100,
     help="The resolution of each cluster [default: 100]")
+
+
 
 
 
@@ -112,7 +114,7 @@ def main():
     #cellBarcodePath=options.cdrFile
     n_proc=options.nproc
     maxReadCount=options.maxReadCount
-    clusterDistance=options.clusterDistance
+    densityFC=options.densityFC
     InnerDistance=options.InnerDistance
     device=options.device
     chromoSizePath=options.chromoSize
@@ -126,7 +128,7 @@ def main():
 
     
 
-    getTSScount=get_PAS_count(PASrefpath,generefpath,fasta_file,bam_file,out_dir,n_proc,minCount,maxReadCount,clusterDistance,InnerDistance,device,chromoSizePath,reads2bamPath)
+    getTSScount=get_PAS_count(PASrefpath,generefpath,fasta_file,bam_file,out_dir,n_proc,minCount,maxReadCount,densityFC,InnerDistance,device,chromoSizePath,reads2bamPath)
     #scadata=getTSScount.produce_sclevel()
     scadata=getTSScount.assign_reads2()
     

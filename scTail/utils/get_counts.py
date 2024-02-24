@@ -36,7 +36,7 @@ def eprint(*args, **kwargs):
 
 
 class get_PAS_count():
-    def __init__(self,PASrefPath,generefPath,fastafilePath,bamfilePath,outdir,nproc,minCount,maxReadCount,clusterDistance,InnerDistance,device,chromoSizePath,reads2bamPath):
+    def __init__(self,PASrefPath,generefPath,fastafilePath,bamfilePath,outdir,nproc,minCount,maxReadCount,densityFC,InnerDistance,device,chromoSizePath,reads2bamPath):
     
         self.PASrefdf=pd.read_csv(PASrefPath,delimiter='\t')
         self.generefdf=pd.read_csv(generefPath,delimiter='\t')
@@ -53,34 +53,13 @@ class get_PAS_count():
         self.pcr_removedPath=os.path.join(self.count_out_dir,'pcr_duplication_removed.bam')
 
         self.minCount=minCount
-        #self.cellBarcode=pd.read_csv(cellBarcodePath,delimiter='\t')['cell_id'].values
         self.nproc=nproc
         self.maxReadCount=maxReadCount
-        self.clusterDistance=clusterDistance
+        self.densityFC=densityFC
         self.InnerDistance=InnerDistance
         self.device=device
 
 
-
-
-
-
-    # def _do_preprocess(self):
-    #     start_time=time.time()
-
-    #     filteredbamfilePath=self.filteredbamfilePath
-    #     infile = pysam.AlignmentFile(self.bamfilePath, "rb")
-    #     outfile = pysam.AlignmentFile(filteredbamfilePath, "wb", template=infile)
-    #     for read in infile:
-    #         if read.get_tag('GX')!='-':
-    #             outfile.write(read)
-    #     infile.close()
-    #     outfile.close()
-
-    #     pysam.index(self.filteredbamfilePath)
-    #     print('filtering reads elapsed %.2f min' %((time.time()-start_time)/60))
-
-    #     return filteredbamfilePath
 
 
 
@@ -145,7 +124,7 @@ class get_PAS_count():
         paraclu_outputPath=os.path.join(self.count_out_dir,'paraclu_output.tsv')
 
         #paraclu_CMD="paraclu {} {} > {}".format(self.minCount,paraclu_inputPath,paraclu_outputPath)
-        paraclu_CMD="paraclu {} {} | paraclu-cut -l 100 -d 0 -s > {}".format(self.minCount, paraclu_inputPath, paraclu_outputPath)
+        paraclu_CMD="paraclu {} {} | paraclu-cut -l {} -d {} > {}".format(self.minCount, paraclu_inputPath, self.InnerDistance, self.densityFC, paraclu_outputPath)
         eprint(paraclu_CMD)
         subprocess.run(paraclu_CMD, shell=True,stdout=subprocess.PIPE)
         print('do clustering Time elapsed %.2f min' %((time.time()-start_time)/60))
@@ -268,7 +247,7 @@ class get_PAS_count():
         plt.plot(x,stats.lognorm.pdf(x,shape_fit,loc=location_fit,scale=scale_fit))
         plt.xlabel('fragment size')
         plt.ylabel('probability density')
-        plt.title('fit by using log normalization')
+        plt.title('fit by using log-normal distribution')
 
         fit_fig_output_path=os.path.join(self.count_out_dir,'lognorm_fit.pdf')
         fig.savefig(fit_fig_output_path, dpi=300, bbox_inches='tight')
