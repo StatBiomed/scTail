@@ -288,7 +288,7 @@ class get_PAS_count():
                 clusterid_ls=[]
                 cluster_likelihood=[]
                 for cluster_index,cluster in selectdf.iterrows():
-                    pas_frag_size=cluster['cluster_start']-pas
+                    pas_frag_size=cluster['cluster_end']-pas
 
                     if pas_frag_size>0:        
                         likelihood=stats.lognorm.pdf(pas_frag_size,shape_fit,loc=location_fit,scale=scale_fit)
@@ -314,7 +314,7 @@ class get_PAS_count():
                 clusterid_ls=[]
                 cluster_likelihood=[]
                 for cluster_index,cluster in selectdf.iterrows():
-                    pas_frag_size=pas-cluster['cluster_end']
+                    pas_frag_size=pas-cluster['cluster_start']
                     
                     if pas_frag_size>0:        
                         likelihood=stats.lognorm.pdf(pas_frag_size,shape_fit,loc=location_fit,scale=scale_fit)
@@ -420,7 +420,12 @@ class get_PAS_count():
         vardf.reset_index(inplace=True)
         vardf.columns=['cluster_id']
         vardf=vardf.merge(cluster_mapped_genedf,on='cluster_id')
+
+        selectgenedf=self.generefdf[['gene_id','gene_name']]
+        vardf=vardf.merge(selectgenedf,on='gene_id')
+
         vardf.set_index('cluster_id',inplace=True,drop=True)
+
         adata.var=vardf
 
         nonzero_indices = np.nonzero(adata.X)
