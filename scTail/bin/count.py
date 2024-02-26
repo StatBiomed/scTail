@@ -20,7 +20,6 @@ def main():
     parser.add_option('--bam','-b',dest='bam_file',default=None,help='The bam file of aligned from STAR or other single cell aligned software.')
     parser.add_option('--outdir','-o',dest='out_dir',default=None,help='The directory for output [default : $bam_file]') 
     parser.add_option('--chromoSize','-c',dest='chromoSize',default=None,help='The file which includes chromosome length')
-    parser.add_option('--reads2_bam',dest='reads2_bam',default=None,help="The bam file filtered by umi_tools, only aligned by using reads2 and used for counting")
  
    
    
@@ -76,11 +75,6 @@ def main():
         print("Error: Need --chromoSize for chromosome size")
 
 
-    #reads2 bam file
-    if options.reads2_bam is None:
-        print("Error: Need --reads2_bam for reads2 bam")
-
-
 
     #output file 
     if options.out_dir is None:
@@ -118,7 +112,6 @@ def main():
     InnerDistance=options.InnerDistance
     device=options.device
     chromoSizePath=options.chromoSize
-    reads2bamPath=options.reads2_bam
 
 
     # Check if GPU
@@ -128,7 +121,7 @@ def main():
 
     
 
-    getTSScount=get_PAS_count(PASrefpath,generefpath,fasta_file,bam_file,out_dir,n_proc,minCount,maxReadCount,densityFC,InnerDistance,device,chromoSizePath,reads2bamPath)
+    getTSScount=get_PAS_count(PASrefpath,generefpath,fasta_file,bam_file,out_dir,n_proc,minCount,maxReadCount,densityFC,InnerDistance,device,chromoSizePath)
     #scadata=getTSScount.produce_sclevel()
     scadata=getTSScount.assign_reads2()
     

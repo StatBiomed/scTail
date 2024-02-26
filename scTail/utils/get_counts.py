@@ -36,14 +36,13 @@ def eprint(*args, **kwargs):
 
 
 class get_PAS_count():
-    def __init__(self,PASrefPath,generefPath,fastafilePath,bamfilePath,outdir,nproc,minCount,maxReadCount,densityFC,InnerDistance,device,chromoSizePath,reads2bamPath):
+    def __init__(self,PASrefPath,generefPath,fastafilePath,bamfilePath,outdir,nproc,minCount,maxReadCount,densityFC,InnerDistance,device,chromoSizePath):
     
         self.PASrefdf=pd.read_csv(PASrefPath,delimiter='\t')
         self.generefdf=pd.read_csv(generefPath,delimiter='\t')
         self.chromosizedf=pd.read_csv(chromoSizePath,delimiter='\t',header=None,index_col=0)
         self.fastafilePath=fastafilePath
         self.bamfilePath=bamfilePath
-        self.reads2bamPath=reads2bamPath
         self.outdir=outdir
         self.count_out_dir=os.path.join(outdir,'count')
         if not os.path.exists(self.count_out_dir):
@@ -74,17 +73,33 @@ class get_PAS_count():
             print(chr)
             samFile, _chrom = check_pysam_chrom(bamFile, str(chr))
             reads = fetch_reads(samFile, _chrom,  0 , self.chromosizedf.loc[chr][1],  trimLen_max=100)
-            reads1_umi = reads["reads1"]   
+            reads1 = reads["reads1"]   
 
 
-            forwardReads1=[r for r in reads1_umi if r.is_reverse==True]
-            reverseReads1=[r for r in reads1_umi if r.is_reverse==False]
-
-            #reads2_umi=reads['reads1']
+            forwardReads1=[r for r in reads1 if r.is_reverse==True]
+            reverseReads1=[r for r in reads1 if r.is_reverse==False]
 
 
-            reads1_PAS_forward=[r.reference_end for r in forwardReads1]
-            reads1_PAS_reverse=[r.reference_start for r in reverseReads1]
+            #customized forward remove pcr duplication; want to use the reference_end whose value is the largest. 10x genomics, first do pcr amplification and then do fragmentation. 
+            #So just require the cellbarcode, UMI are the same, even the sequence is not the same, the alignment site is not the same, they still are the duplication. 
+            forwardreadsdf=pd.DataFrame({'CB':[r.get_tag('CB') for r in forwardReads1],'UMI':[r.get_tag('UB') for r in forwardReads1],'gene':[r.get_tag('GX') for r in forwardReads1],'PAS':[r.reference_end for r in forwardReads1]})
+            notoperate=forwardreadsdf[~forwardreadsdf.duplicated(['CB','UMI','gene'],keep=False)]
+            duplicationdf=forwardreadsdf[forwardreadsdf.duplicated(['CB','UMI','gene'],keep=False)]
+            duplicationdf.sort_values(['CB','UMI','gene','PAS'],inplace=True)
+            afterduplication=duplicationdf.groupby(['CB','UMI','gene']).tail(1)
+            forward_pcr_deduplicationdf=pd.concat([notoperate,afterduplication],axis=0)
+            reads1_PAS_forward=forward_pcr_deduplicationdf['PAS'].tolist()
+
+
+            reversereadsdf=pd.DataFrame({'CB':[r.get_tag('CB') for r in reverseReads1],'UMI':[r.get_tag('UB') for r in reverseReads1],'gene':[r.get_tag('GX') for r in reverseReads1],'PAS':[r.reference_start for r in reverseReads1]})
+            reverse_notoperate=reversereadsdf[~reversereadsdf.duplicated(['CB','UMI','gene'],keep=False)]
+            reverse_duplicationdf=reversereadsdf[reversereadsdf.duplicated(['CB','UMI','gene'],keep=False)]
+            reverse_duplicationdf.sort_values(['CB','UMI','gene','PAS'],inplace=True)
+            reverse_afterduplication=reverse_duplicationdf.groupby(['CB','UMI','gene']).head(1)
+            reverse_pcr_deduplicationdf=pd.concat([reverse_notoperate,reverse_afterduplication],axis=0)
+            reads1_PAS_reverse=reverse_pcr_deduplicationdf['PAS'].tolist()
+
+
 
             forward_pos,forward_count=np.unique(reads1_PAS_forward,return_counts=True)
             reverse_pos,reverse_count=np.unique(reads1_PAS_reverse,return_counts=True)
@@ -267,12 +282,10 @@ class get_PAS_count():
         strand=list(selectdf['gene_strand'])[0]
             
             
-        samFile, _chrom = check_pysam_chrom(self.reads2bamPath, gene_chr)
+        samFile, _chrom = check_pysam_chrom(self.bamfilePath, gene_chr)
         reads = fetch_reads(samFile, _chrom, gene_start, gene_end,  trimLen_max=100)
 
-        reads2=reads['reads1u']
-
-
+        reads2=reads['reads2u']+reads['reads2']
         reads2=[r for r in reads2 if r.get_tag('GX')==geneid]
 
 
@@ -282,7 +295,12 @@ class get_PAS_count():
 
         pas_output_ls=[]
         if strand=='+':
-            reads2_pas=[r.reference_end for r in reads2]
+            reads2df=pd.DataFrame({'CB':[r.get_tag('CB') for r in reads2],'UMI':[r.get_tag('UB') for r in reads2],'reads2_Pos':[r.reference_end for r in reads2]})
+            sorteddf=reads2df.sort_values(['CB','UMI','reads2_Pos'])
+            sorteddf.groupby(['CB','UMI']).tail(n=1)
+
+            reads2_pas=sorteddf['reads2_Pos'].tolist()
+
 
             for pas_index, pas in enumerate(reads2_pas):
                 clusterid_ls=[]
@@ -307,8 +325,14 @@ class get_PAS_count():
                     pass
 
 
+
         elif strand=='-':
-            reads2_pas=[r.reference_start for r in reads2]
+
+            reads2df=pd.DataFrame({'CB':[r.get_tag('CB') for r in reads2],'UMI':[r.get_tag('UB') for r in reads2],'reads2_Pos':[r.reference_start for r in reads2]})
+            sorteddf=reads2df.sort_values(['CB','UMI','reads2_Pos'])
+            sorteddf.groupby(['CB','UMI']).head(n=1)
+            reads2_pas=sorteddf['reads2_Pos'].tolist()
+
 
             for pas_index, pas in enumerate(reads2_pas):
                 clusterid_ls=[]
