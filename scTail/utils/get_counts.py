@@ -36,11 +36,12 @@ def eprint(*args, **kwargs):
 
 
 class get_PAS_count():
-    def __init__(self,PASrefPath,generefPath,fastafilePath,bamfilePath,outdir,nproc,minCount,maxReadCount,densityFC,InnerDistance,device,chromoSizePath):
+    def __init__(self,PASrefPath,generefPath,fastafilePath,bamfilePath,outdir,nproc,minCount,maxReadCount,densityFC,InnerDistance,device,chromoSizePath,cellbarcodePath):
     
         self.PASrefdf=pd.read_csv(PASrefPath,delimiter='\t')
         self.generefdf=pd.read_csv(generefPath,delimiter='\t')
         self.chromosizedf=pd.read_csv(chromoSizePath,delimiter='\t',header=None,index_col=0)
+        self.cellbarcode=pd.read_csv(cellbarcodePath,delimiter='\t')['cellbarcode'].values
         self.fastafilePath=fastafilePath
         self.bamfilePath=bamfilePath
         self.outdir=outdir
@@ -70,14 +71,18 @@ class get_PAS_count():
 
         allchrls=[]
         for chr in self.chromosizedf.index:
-            print(chr)
+            #print(chr)
             samFile, _chrom = check_pysam_chrom(bamFile, str(chr))
             reads = fetch_reads(samFile, _chrom,  0 , self.chromosizedf.loc[chr][1],  trimLen_max=100)
             reads1 = reads["reads1"]   
 
+            reads1=[r for r in reads1 if r.get_tag('CB') in self.cellbarcode]
+
 
             forwardReads1=[r for r in reads1 if r.is_reverse==True]
             reverseReads1=[r for r in reads1 if r.is_reverse==False]
+
+
 
 
             #customized forward remove pcr duplication; want to use the reference_end whose value is the largest. 10x genomics, first do pcr amplification and then do fragmentation. 
@@ -113,7 +118,7 @@ class get_PAS_count():
             onechrdf=pd.concat([forwarddf,reversedf],axis=0)
             onechrdf['chr']=chr
             allchrls.append(onechrdf)
-            print(allchrls)
+            #print(allchrls)
 
 
         paracluinputdf=pd.concat(allchrls,axis=0)
@@ -210,6 +215,10 @@ class get_PAS_count():
             reads2_paired=reads['reads2']
 
 
+            reads1_paired=[r for r in reads1_paired if r.get_tag('CB') in self.cellbarcode]
+            reads2_paired=[r for r in reads2_paired if r.get_tag('CB') in self.cellbarcode]
+
+
             reads1_paired=[r for r in reads1_paired if r.get_tag('GX')==row['gene_id']]
             reads2_paired=[r for r in reads2_paired if r.get_tag('GX')==row['gene_id']]
 
@@ -287,6 +296,7 @@ class get_PAS_count():
 
         reads2=reads['reads2u']+reads['reads2']
         reads2=[r for r in reads2 if r.get_tag('GX')==geneid]
+        reads2=[r for r in reads2 if r.get_tag('CB') in self.cellbarcode]
 
 
         if len(reads2)>self.maxReadCount:
@@ -395,11 +405,18 @@ class get_PAS_count():
         cutoff_likelihood=np.max(stats.lognorm.pdf(cutoff_x,shape_fit,loc=location_fit,scale=scale_fit))/2
 
 
-        allgene_coordinate_path=str(Path(os.path.dirname(os.path.abspath(__file__))).parents[0])+'/model/human_hg38_allgene_coordinate.bed'
+
+        refbeddf=self.generefdf
+        refbeddf['score']=0
+        refbeddf=refbeddf[['Chromosome','Start','End','gene_id','score','Strand']]
+
+        genebedPath=os.path.join(self.outdir,'ref_file','gene_coordinate.bed')
+        refbeddf.to_csv(genebedPath,sep='\t',header=None,index=None)
+        
         cluster_mapped_gene_path=os.path.join(self.count_out_dir,'cluster_mapped_gene.bed')
 
 
-        bedtools_CMD="bedtools intersect -a {} -b {} -wa -wb > {}".format(positive_bed_path, allgene_coordinate_path, cluster_mapped_gene_path)
+        bedtools_CMD="bedtools intersect -a {} -b {} -wa -wb > {}".format(positive_bed_path, genebedPath, cluster_mapped_gene_path)
         eprint(bedtools_CMD)
         subprocess.run(bedtools_CMD, shell=True,stdout=subprocess.PIPE)
 
@@ -460,6 +477,14 @@ class get_PAS_count():
 
         allcluster_adata_path=os.path.join(self.count_out_dir,'all_cluster.h5ad')
         adata.write(allcluster_adata_path)
+
+
+        twoclusterdf=vardf[vardf.duplicated('gene_id',keep=False)]
+        twoclusteradata=adata[:,twoclusterdf.index]
+        twocluster_adata_path=os.path.join(self.count_out_dir,'two_cluster.h5ad')
+        twoclusteradata.write(twocluster_adata_path)
+
+
 
         return adata
 

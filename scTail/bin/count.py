@@ -15,12 +15,12 @@ START_TIME = time.time()
 def main():
     parser = OptionParser()
     parser.add_option('--gtf','-g',dest='gtf_file',default=None,help='The annotation gtf file for your analysing species.')
-    #parser.add_option('--cellbarcodeFile','-c',dest='cdrFile',default=None,help='The file include cell barcode which users want to keep in the downstream analysis.')
+    parser.add_option('--cellbarcode',dest='cdrFile',default=None,help='The file include cell barcode which users want to keep in the downstream analysis.')
     parser.add_option('--fasta','-f',dest='fasta',default=None,help='The reference genome file') 
     parser.add_option('--bam','-b',dest='bam_file',default=None,help='The bam file of aligned from STAR or other single cell aligned software.')
     parser.add_option('--outdir','-o',dest='out_dir',default=None,help='The directory for output [default : $bam_file]') 
-    parser.add_option('--chromoSize','-c',dest='chromoSize',default=None,help='The file which includes chromosome length')
- 
+    parser.add_option('--chromoSize',dest='chromoSize',default=None,help='The file which includes chromosome length')
+
    
    
     group0=OptionGroup(parser,"Optional arguments")
@@ -73,6 +73,13 @@ def main():
     # chromosome size
     if options.chromoSize is None:
         print("Error: Need --chromoSize for chromosome size")
+        sys.exit(1)
+
+
+    # cellbarcode 
+    if options.cdrFile is None:
+        print("Error: Need --cellbarcode for cellbarcode size")
+        sys.exit(1)
 
 
 
@@ -112,6 +119,7 @@ def main():
     InnerDistance=options.InnerDistance
     device=options.device
     chromoSizePath=options.chromoSize
+    cellbarcodePath=options.cdrFile
 
 
     # Check if GPU
@@ -121,7 +129,7 @@ def main():
 
     
 
-    getTSScount=get_PAS_count(PASrefpath,generefpath,fasta_file,bam_file,out_dir,n_proc,minCount,maxReadCount,densityFC,InnerDistance,device,chromoSizePath)
+    getTSScount=get_PAS_count(PASrefpath,generefpath,fasta_file,bam_file,out_dir,n_proc,minCount,maxReadCount,densityFC,InnerDistance,device,chromoSizePath,cellbarcodePath)
     #scadata=getTSScount.produce_sclevel()
     scadata=getTSScount.assign_reads2()
     
