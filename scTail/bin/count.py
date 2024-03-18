@@ -1,8 +1,7 @@
 from optparse import OptionParser,OptionGroup
 from ..version import __version__
 import sys
-from ..utils.build_ref import get_PASref
-from ..utils.build_ref import get_generef
+from ..utils.build_ref import get_PASref,get_gene_with_one_transcript,get_generef
 from ..utils.get_counts import get_PAS_count
 import os
 import pandas as pd
@@ -20,6 +19,7 @@ def main():
     parser.add_option('--bam','-b',dest='bam_file',default=None,help='The bam file of aligned from STAR or other single cell aligned software.')
     parser.add_option('--outdir','-o',dest='out_dir',default=None,help='The directory for output [default : $bam_file]') 
     parser.add_option('--chromoSize',dest='chromoSize',default=None,help='The file which includes chromosome length')
+    parser.add_option('--species',dest='species',default=None,help="This indicates the species that you want to analysis. Only human and mouse are supportted. You should input human or mouse")
 
    
    
@@ -82,6 +82,10 @@ def main():
         sys.exit(1)
 
 
+    if options.species is None:
+        print("Error: Need --species to select the species you analysis")
+
+
 
     #output file 
     if options.out_dir is None:
@@ -106,6 +110,7 @@ def main():
         PASrefpath=get_PASref(grdf,ref_out_dir)
         PASdf=pd.read_csv(PASrefpath,delimiter='\t')
         generefpath=get_generef(grdf,PASdf,ref_out_dir)
+        one_gene_transcriptPath=get_gene_with_one_transcript(grdf,ref_out_dir)
 
 
 
@@ -120,6 +125,7 @@ def main():
     device=options.device
     chromoSizePath=options.chromoSize
     cellbarcodePath=options.cdrFile
+    species=options.species
 
 
     # Check if GPU
@@ -129,7 +135,7 @@ def main():
 
     
 
-    getTSScount=get_PAS_count(PASrefpath,generefpath,fasta_file,bam_file,out_dir,n_proc,minCount,maxReadCount,densityFC,InnerDistance,device,chromoSizePath,cellbarcodePath)
+    getTSScount=get_PAS_count(PASrefpath,generefpath,fasta_file,bam_file,out_dir,n_proc,minCount,maxReadCount,densityFC,InnerDistance,device,chromoSizePath,cellbarcodePath,species)
     #scadata=getTSScount.produce_sclevel()
     scadata=getTSScount.assign_reads2()
     

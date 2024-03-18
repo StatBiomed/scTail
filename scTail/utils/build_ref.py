@@ -40,3 +40,15 @@ def get_generef(grdf,transcriptdf,out_dir):
     return geneoutput_path
 
 
+def get_gene_with_one_transcript(grdf,out_dir):
+    transcriptdf=grdf[grdf['Feature']=='transcript']
+    transcriptdf=transcriptdf[['Chromosome','Start','End','Strand','gene_id','transcript_id','gene_name','transcript_name']]
+    countdf=transcriptdf.groupby('gene_id').size().reset_index(name='count')
+    onetranscriptdf=countdf[countdf['count']==1]
+    onetranscriptbed=transcriptdf[transcriptdf['gene_id'].isin(onetranscriptdf['gene_id'])]
+
+    onetranscript_path=os.path.join(out_dir,'one_transcript_gene.tsv')
+    onetranscriptbed.to_csv(onetranscript_path,sep='\t',index=None)
+    return onetranscript_path
+
+

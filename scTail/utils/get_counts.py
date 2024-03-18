@@ -24,6 +24,7 @@ from collections import Counter
 import matplotlib.pyplot as plt
 import random 
 from scipy.sparse import csr_matrix
+from .build_ref import get_gene_with_one_transcript
 
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -36,7 +37,7 @@ def eprint(*args, **kwargs):
 
 
 class get_PAS_count():
-    def __init__(self,PASrefPath,generefPath,fastafilePath,bamfilePath,outdir,nproc,minCount,maxReadCount,densityFC,InnerDistance,device,chromoSizePath,cellbarcodePath):
+    def __init__(self,PASrefPath,generefPath,fastafilePath,bamfilePath,outdir,nproc,minCount,maxReadCount,densityFC,InnerDistance,device,chromoSizePath,cellbarcodePath,species):
     
         self.PASrefdf=pd.read_csv(PASrefPath,delimiter='\t')
         self.generefdf=pd.read_csv(generefPath,delimiter='\t')
@@ -58,6 +59,7 @@ class get_PAS_count():
         self.densityFC=densityFC
         self.InnerDistance=InnerDistance
         self.device=device
+        self.species=species 
 
 
 
@@ -176,7 +178,14 @@ class get_PAS_count():
         test_loader = DataLoader(test_set, batch_size=1, shuffle=False)
 
         net=Net().to(self.device)
-        pretrained_model_path=str(Path(os.path.dirname(os.path.abspath(__file__))).parents[0])+'/model/model_last.pth'
+
+        if self.species=='human':
+            pretrained_model_path=str(Path(os.path.dirname(os.path.abspath(__file__))).parents[0])+'/model/human_pretrained_model.pth'
+        elif self.species=='mouse':
+            pretrained_model_path=str(Path(os.path.dirname(os.path.abspath(__file__))).parents[0])+'/model/mouse_pretrained_model.pth'
+
+
+        
         predict_result_output=os.path.join(self.count_out_dir,'predict_result.tsv')
         positivedf=test(test_loader,self.device,net,pretrained_model_path,predict_result_output)
 
@@ -201,7 +210,7 @@ class get_PAS_count():
         start_time=time.time()
 
         #rewrite
-        one_transcript_path=str(Path(os.path.dirname(os.path.abspath(__file__))).parents[0])+'/model/human_hg38_gene_with_one_transcript.tsv'
+        one_transcript_path=os.path.join(self.outdir,'ref_file','one_transcript_gene.tsv')
         one_transcriptdf=pd.read_csv(one_transcript_path,delimiter='\t')
         select_transcriptdf=one_transcriptdf.sample(n=10000,random_state=666)
 
