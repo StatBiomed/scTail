@@ -59,7 +59,10 @@ setup(
 
     entry_points={
           'console_scripts': [
-            'scTail = scTail.bin.count:main',
+            'scTail = scTail.bin.scTail_main:main',
+            'scTail-callPeak = scTail.bin.callPeak:main',
+            'scTail-peakMerge = scTail.bin.peakMerge:main',
+            'scTail-count = scTail.bin.count:main'
             ],
           }, 
 
