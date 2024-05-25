@@ -314,9 +314,9 @@ class DoCounting():
         finaldf=finaldf.loc[:, (finaldf != 0).any(axis=0)]
 
         adata=ad.AnnData(finaldf)
-        print(adata.shape)
-        print(adata)
-        adata.write('/mnt/ruiyanhou/nfs_share2/three_primer/mouse_forelimb/test/mouse_forelimb.h5ad')
+        #print(adata.shape)
+        #print(adata)
+        #adata.write('/mnt/ruiyanhou/nfs_share2/three_primer/mouse_forelimb/test/mouse_forelimb.h5ad')
         vardf=pd.DataFrame(adata.var.copy())
         vardf.reset_index(inplace=True)
         vardf.columns=['cluster_id']
