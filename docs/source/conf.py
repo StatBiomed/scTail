@@ -55,6 +55,8 @@ from datetime import datetime
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
+import sphinx_autodoc_typehints
+import nbsphinx
 
 needs_sphinx = "1.7"
 
@@ -67,7 +69,7 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.intersphinx",
     "sphinx.ext.githubpages",
-    #"sphinx_autodoc_typehints",
+    "sphinx_autodoc_typehints",
     "nbsphinx",
     # "edit_on_github",
 ]
