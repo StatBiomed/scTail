@@ -1,14 +1,13 @@
 # Just until rtd.org understands pyproject.toml
-scTail
-setuptools
-setuptools_scm
-typing_extensions
-importlib_metadata
-sphinx_rtd_theme
+#setuptools
+#setuptools_scm
+#typing_extensions
+#importlib_metadata
+#sphinx_rtd_theme
 sphinx_autodoc_typehints
-python-dotenv
+#python-dotenv
 
 # converting notebooks to html
-ipykernel
-sphinx
+#ipykernel
+#sphinx
 nbsphinx
