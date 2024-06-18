@@ -1,4 +1,4 @@
-#Just until rtd.org understands pyproject.toml
+# Just until rtd.org understands pyproject.toml
 scTail
 setuptools
 setuptools_scm
@@ -11,4 +11,3 @@ sphinx_autodoc_typehints
 ipykernel
 sphinx
 nbsphinx<=0.8.6
-
