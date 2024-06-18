@@ -27,7 +27,7 @@ scTail detect and quantify PAS through three steps: **scTail-callPeak** **scTail
 
 scTail identify PAS through the following steps.
 
-.. image:: image/flowchart.png
+.. image:: ../image/flowchart.png
    :width: 600
    :alt: flow chart for scTail
    :align: center
@@ -35,7 +35,7 @@ scTail identify PAS through the following steps.
 
 Specificlly, a convolutional neural network was applied to filter out false positive peaks.
 
-.. image:: image/CNN_model.png
+.. image:: ../image/CNN_model.png
    :width: 600
    :alt: classifier
    :align: center
@@ -58,7 +58,7 @@ Please refer to our tutorial for details.
 
 .. _Run scTail: run_scTail.rst
 
-.. _Run BRIE2: runBRIE.ipynb
+.. _Run BRIE2: ../../notebook/runBRIE.ipynb
 
 
 .. toctree::
@@ -66,7 +66,7 @@ Please refer to our tutorial for details.
    :maxdepth: 1
    :hidden:
 
-   index
+   
    install
    preprocess
    run_scTail
