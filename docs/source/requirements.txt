@@ -3,9 +3,9 @@
 #setuptools_scm
 #typing_extensions
 #importlib_metadata
-#sphinx_rtd_theme
+sphinx_rtd_theme
 sphinx_autodoc_typehints
-#python-dotenv
+
 
 # converting notebooks to html
 #ipykernel
