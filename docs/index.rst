@@ -1,7 +1,7 @@
 |PyPI| |Docs| 
 
-.. |PyPI| image:: https://badge.fury.io/py/CamoTSS.svg
-       :target: https://pypi.org/project/CamoTSS/
+.. |PyPI| image:: https://badge.fury.io/py/scTail.svg
+       :target: https://pypi.org/project/scTail/0.0.1/
 .. |Docs| image:: https://readthedocs.org/projects/camotss/badge/?version=latest
       :target: https://camotss.readthedocs.io/en/latest/?badge=latest
 
@@ -54,11 +54,11 @@ Please refer to our tutorial for details.
 
 * `Run BRIE2`_.
 
-.. _Preprocess for one sample and multiple samples: preprocess.rst
+.. _Preprocess for sample with small size (bam file < 30G) or large size (bam file > 30G), respectively: preprocess.rst
 
-.. _Run CamoTSS: run_scTail.rst
+.. _Run scTail: run_scTail.rst
 
-.. _Run Brie2: runBRIE.ipynb
+.. _Run BRIE2: runBRIE.ipynb
 
 
 .. toctree::
