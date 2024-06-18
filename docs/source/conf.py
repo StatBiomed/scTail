@@ -78,7 +78,7 @@ if os.environ.get('READTHEDOCS') == 'True':
 # ones.
 
 
-needs_sphinx = "1.7"
+needs_sphinx = "1.8"
 
 extensions = [
     "sphinx.ext.autodoc",
