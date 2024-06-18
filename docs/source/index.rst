@@ -54,11 +54,11 @@ Please refer to our tutorial for details.
 
 * `Run BRIE2`_.
 
-.. _Preprocess for sample with small size (bam file < 30G) or large size (bam file > 30G), respectively: preprocess.rst
+.. _Preprocess for sample with small size (bam file < 30G) or large size (bam file > 30G), respectively: ./preprocess.rst
 
-.. _Run scTail: run_scTail.rst
+.. _Run scTail: ./run_scTail.rst
 
-.. _Run BRIE2: ../../notebook/runBRIE.ipynb
+.. _Run BRIE2: ./runBRIE.ipynb
 
 
 .. toctree::
@@ -70,5 +70,5 @@ Please refer to our tutorial for details.
    install
    preprocess
    run_scTail
-   runBRIE
+   runBRIE.ipynb
    release
