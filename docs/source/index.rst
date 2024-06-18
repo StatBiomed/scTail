@@ -66,7 +66,7 @@ Please refer to our tutorial for details.
    :maxdepth: 1
    :hidden:
 
-   
+   index   
    install
    preprocess
    run_scTail
