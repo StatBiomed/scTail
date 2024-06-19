@@ -21,21 +21,26 @@ from datetime import datetime
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #sys.path.insert(0, os.path.abspath('.'))
 
-#from pathlib import Path
-#HERE = Path(__file__).parent
-#sys.path.insert(0, f"{HERE.parent.parent}")
-#sys.path.insert(0, os.path.abspath("_ext"))
 
+from pathlib import Path
+HERE = Path(__file__).parent
+sys.path.insert(0, f"{HERE.parent.parent}")
+sys.path.insert(0, os.path.abspath("_ext"))
 
-# Set the output directory for Sphinx based on the READTHEDOCS environment variable
-#if os.environ.get('READTHEDOCS') == 'True':
-  #  html_static_path = [os.path.join(os.environ.get('READTHEDOCS_PROJECT'), '_static')]
-  #  html_extra_path = [os.path.join(os.environ.get('READTHEDOCS_PROJECT'), '_extra')]
-   # html_context = {'extra_css_files': ['_extra/css/custom.css']}
-   # html_theme = 'default'
-   # html_css_files = []
-    # Set the output directory to the root of the project
-    #os.environ['READTHEDOCS_OUTPUT'] = os.path.dirname(os.path.abspath(__file__))
+# -- Retrieve notebooks ------------------------------------------------
+
+from urllib.request import urlretrieve
+
+notebooks_url = "https://github.com/StatBiomed/scTail/tree/main/notebook"
+notebooks = [
+    "runBRIE.ipynb"
+]
+for nb in notebooks:
+    try:
+        urlretrieve(notebooks_url + nb, nb)
+    except:
+        raise ValueError(f'{nb} cannot be retrieved.')
+
 
 
 
