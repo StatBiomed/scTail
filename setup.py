@@ -20,8 +20,10 @@ exec(open("./scTail/version.py").read())
 with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
     
-reqs = ['numpy>=1.9.0', 'scipy>=1.4.0', 'matplotlib','anndata>=0.6','pyranges>=0.0.115',
-'scanpy>=1.5','pysam>=0.15.2','pandas>=0.23.0','scikit-learn>=0.23','editdistance>=0.3.1']
+reqs = ['torch>=2.1.0','pyranges==0.0.129','pandas==2.1.1','anndata==0.10.3',
+'pysam>=0.22.0','scipy==1.12.0','scikit-learn==1.3.2','matplotlib==3.8.1','pyfaidx==0.7.2.2','tqdm==4.66.1',
+'kipoiseq==0.7.1','numpy==1.22.4','attrs<=21.4.0']
+
 
 setup(
     name='scTail',
@@ -55,7 +57,7 @@ setup(
 
     packages=find_packages(),
 
-    package_data={'scTail': ['model/*.sav']},
+    #package_data={'scTail': ['model/*.sav']},
 
     entry_points={
           'console_scripts': [
@@ -71,7 +73,7 @@ setup(
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
 
-    python_requires='>=3.5',
+    python_requires='>=3.9',
 
     install_requires=reqs,
 

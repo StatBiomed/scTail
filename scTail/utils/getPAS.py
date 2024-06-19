@@ -1,30 +1,15 @@
 import numpy as np
 import pandas as pd
 import os
-import pickle
-from functools import reduce
 import anndata as ad
 import multiprocessing as mp
-import pysam
 import warnings
-from pathlib import Path
-from sklearn.cluster import AgglomerativeClustering
-from scipy.optimize import linear_sum_assignment
 import time
 import subprocess
-import re
 import sys
 from .deep_learning import scDataset, Net,test 
-from scipy import stats
 from torch.utils.data import DataLoader
 from .toolbox import check_pysam_chrom,fetch_reads
-from sklearn.neighbors import KernelDensity
-import racplusplus
-from collections import Counter
-import matplotlib.pyplot as plt
-import random 
-from scipy.sparse import csr_matrix
-from .build_ref import get_gene_with_one_transcript
 
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
