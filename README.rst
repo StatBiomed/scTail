@@ -3,8 +3,8 @@ scTail for alternative PAS analysis in single cells
 ============================================================
 |pypi| 
 
-.. |pypi| image:: https://badge.fury.io/py/CamoTSS.svg
-       :target: https://pypi.org/project/CamoTSS/
+.. |pypi| image:: https://badge.fury.io/py/scTail.svg
+       :target: https://pypi.org/project/scTail/
 
 .. image:: https://zenodo.org/badge/497821671.svg
       :target: https://zenodo.org/badge/latestdoi/497821671
@@ -70,7 +70,7 @@ Here, we provide an example exploiting BRIE2 to detect differential PAS usage.
 
 You can check it in our manual_.
 
-.. _manual: https://camotss.readthedocs.io/en/latest/runBRIE.html  
+.. _manual: https://sctail.readthedocs.io/en/latest/runBRIE.html  
 
 
 Detailed Manual
@@ -80,23 +80,24 @@ The full manual is here_, including:
 
 `Preprocess`_
 
-`Run CamoTSS`_
+`Run scTail`_
 
-`Detect alternative TSS/CTSS`_
+`Detect alternative PAS`_
 
-.. _here: https://camotss.readthedocs.io/en/latest/index.html
+.. _here: https://sctail.readthedocs.io/en/latest/index.html
 
-.. _Preprocess: https://camotss.readthedocs.io/en/latest/preprocess.html
+.. _Preprocess: https://sctail.readthedocs.io/en/latest/preprocess.html
 
-.. _Run CamoTSS: https://camotss.readthedocs.io/en/latest/run_CamoTSS.html
+.. _Run scTail: https://sctail.readthedocs.io/en/latest/run_scTail.html
 
-.. _Detect alternative TSS/CTSS: https://camotss.readthedocs.io/en/latest/runBRIE.html
+.. _Detect alternative PAS: https://sctail.readthedocs.io/en/latest/runBRIE.html
 
 
 
 Reference
 ===========
 
+coming soon
 
 
 

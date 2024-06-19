@@ -2,8 +2,8 @@
 
 .. |PyPI| image:: https://badge.fury.io/py/scTail.svg
        :target: https://pypi.org/project/scTail/0.0.1/
-.. |Docs| image:: https://readthedocs.org/projects/camotss/badge/?version=latest
-      :target: https://camotss.readthedocs.io/en/latest/?badge=latest
+.. |Docs| image:: https://readthedocs.org/projects/sctail/badge/?version=latest
+      :target: https://sctail.readthedocs.io/en/latest/?badge=latest
 
 
 
