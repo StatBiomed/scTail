@@ -29,17 +29,17 @@ sys.path.insert(0, os.path.abspath("_ext"))
 
 # -- Retrieve notebooks ------------------------------------------------
 
-from urllib.request import urlretrieve
+#from urllib.request import urlretrieve
 
-notebooks_url = "https://github.com/StatBiomed/scTail/tree/main/notebook"
-notebooks = [
-    "runBRIE.ipynb"
-]
-for nb in notebooks:
-    try:
-        urlretrieve(notebooks_url + nb, nb)
-    except:
-        raise ValueError(f'{nb} cannot be retrieved.')
+#notebooks_url = "https://github.com/StatBiomed/scTail/tree/main/notebook"
+#notebooks = [
+#    "runBRIE.ipynb"
+#]
+#for nb in notebooks:
+#    try:
+#        urlretrieve(notebooks_url + nb, nb)
+#    except:
+#        raise ValueError(f'{nb} cannot be retrieved.')
 
 
 
