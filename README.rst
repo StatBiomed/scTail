@@ -57,7 +57,7 @@ scTail only support two species: mouse and human. Because classifier embedded in
 
 When you get fastq file, you should follow this instruction_ to run scTail step by step. 
 
-.. _instruction: 
+.. _instruction: https://sctail.readthedocs.io/en/latest/run_scTail.html
 
 
 
