@@ -20,6 +20,12 @@ I check email every day.
 
 Installation
 ============
+scTail was developed by using python 3.9. You can build a environment by 
+using the following code at first. 
+
+.. code-block:: bash
+
+  conda create -n run_scTail python=3.9
 
 You can install from this GitHub repository for latest (often development) 
 version by following command line
