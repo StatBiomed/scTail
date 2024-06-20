@@ -11,18 +11,21 @@ from os import path
 
 
 
-here = path.abspath(path.dirname(__file__))
+
+
 
 # Set __version__ for the project.
 exec(open("./scTail/version.py").read())
+
+here = path.abspath(path.dirname(__file__))
 
 # Get the long description from the relevant file
 with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
     
-reqs = ['torch>=2.1.0','pyranges==0.0.129','pandas==2.1.1','anndata==0.10.3',
-'pysam>=0.22.0','scipy==1.12.0','scikit-learn==1.3.2','matplotlib==3.8.1','pyfaidx==0.7.2.2','tqdm==4.66.1',
-'kipoiseq==0.7.1','numpy==1.22.4','attrs<=21.4.0']
+reqs = ['torch>=2.1.0','pyranges>=0.0.129','pandas>=2.1.1','anndata>=0.10.3',
+'pysam>=0.22.0','scipy>=1.12.0','scikit-learn>=1.3.2','matplotlib>=3.8.1','pyfaidx>=0.7.2.2','tqdm>=4.66.1',
+'kipoiseq>=0.7.1','numpy>=1.22.4','attrs<=21.4.0']
 
 
 setup(
@@ -64,7 +67,7 @@ setup(
             'scTail = scTail.bin.scTail_main:main',
             'scTail-callPeak = scTail.bin.callPeak:main',
             'scTail-peakMerge = scTail.bin.peakMerge:main',
-            'scTail-count = scTail.bin.count:main'
+            'scTail-count = scTail.bin.count:main',
             ],
           }, 
 
@@ -82,7 +85,7 @@ setup(
             #'sphinx == 1.8.3',
             'sphinx_bootstrap_theme']},
 
-    py_modules = ['scTail']
+    #py_modules = ['scTail']
 
     # buid the distribution: python setup.py sdist
     # upload to pypi: twine upload dist/...
