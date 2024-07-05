@@ -12,6 +12,7 @@ from .toolbox import check_pysam_chrom,fetch_reads
 import matplotlib.pyplot as plt
 import random 
 from scipy.sparse import csr_matrix
+from pathlib import Path
 
 
 warnings.simplefilter(action='ignore', category=FutureWarning)

@@ -60,7 +60,7 @@ setup(
 
     packages=find_packages(),
 
-    #package_data={'scTail': ['model/*.sav']},
+    package_data={'scTail': ['model/*.pth']},
 
     entry_points={
           'console_scripts': [

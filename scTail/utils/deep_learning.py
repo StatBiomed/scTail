@@ -10,6 +10,7 @@ from kipoiseq.transforms.functional import one_hot_dna
 import numpy as np
 import torch
 import torch.nn as nn
+from pathlib import Path
 
 
 
