@@ -20,3 +20,9 @@ In either case, add --user if you don’t have the write permission for your Pyt
 If you run into any issues or errors are raised during the installation process, feel free to contact us at GitHub_.
 
 .. _GitHub: https://github.com/StatBiomed/scTail/issues
+
+In addition, you should also install paraclu by youself to make sure scTail running smoothly.
+
+.. code-block:: bash 
+
+   conda install bioconda::paraclu

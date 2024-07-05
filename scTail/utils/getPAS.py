@@ -10,6 +10,7 @@ import sys
 from .deep_learning import scDataset, Net,test 
 from torch.utils.data import DataLoader
 from .toolbox import check_pysam_chrom,fetch_reads
+from pathlib import Path
 
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
