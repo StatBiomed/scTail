@@ -34,7 +34,7 @@ You can download test file from figshare_.
 
 .. _figshare: https://doi.org/10.6084/m9.figshare.25902508.v1
 
-Here, you can download some large file include genome.fa, annotation gtf, a bam file and so on.
+Here, you can download some large file include genome.fa, annotation gtf, a bam file and so on. Please note that you should also download the index file (.bam.bai) for the bam file or index by youself.
 
 Alternatively, you can also download the reference genome fasta file from Ensembl or Genecode. But please make you use the same genome.fa and annotation gtf file as the process building STAR index.
 

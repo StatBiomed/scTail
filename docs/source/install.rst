@@ -21,8 +21,13 @@ If you run into any issues or errors are raised during the installation process,
 
 .. _GitHub: https://github.com/StatBiomed/scTail/issues
 
-In addition, you should also install paraclu by youself to make sure scTail running smoothly.
+In addition, you should also install paraclu_ and bedtools by youself to make sure scTail running smoothly.
+
+.. _paraclu: https://gitlab.com/mcfrith/paraclu
 
 .. code-block:: bash 
 
    conda install bioconda::paraclu
+   conda install bioconda::bedtools
+
+ 
