@@ -54,7 +54,7 @@ Filter out reads according to the following code:
         outputbam=pysam.Samfile(outputbamfile,'wb',template=inputbam)
         for read in inputbam.fetch():
             if (read.get_tag('GX')!='-') & (read.get_tag('CB')!='-') & (read.get_tag('UB')!='-'):
-                outfile.write(read)
+                outputbam.write(read)
         inputbam.close()
         outputbam.close()
 

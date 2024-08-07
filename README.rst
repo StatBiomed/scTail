@@ -103,7 +103,7 @@ The full manual is here_, including:
 Reference
 ===========
 
-coming soon
+Hou R, Huang Y. scTail: precise polyadenylation site detection and its alternative usage analysis from reads 1 preserved 3'scRNA-seq data[J]. bioRxiv, 2024: 2024.07. 05.602174.
 
 
 
