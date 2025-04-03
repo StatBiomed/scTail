@@ -133,7 +133,7 @@ def test(testdataloader,device,net,pretrained_model_path,save_file):
     #os.environ["CUDA_VISIBLE_DEVICES"] = str(device)
     
 
-    check_point=torch.load(pretrained_model_path,map_location=torch.device(device))
+    check_point=torch.load(pretrained_model_path,map_location=torch.device(device),weights_only=False)
     net.load_state_dict(check_point['state_dict'])
 
     #get predicted label
