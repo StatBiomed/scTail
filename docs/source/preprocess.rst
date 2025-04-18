@@ -2,10 +2,26 @@
 Preprocess
 ===========
 
+
+Requirement : length of first strand reads
+============================================
+If you want to run scTail, you must make sure the length of your first strand reads is more than 70bp. 
+
+We evaluate different lengths of first strand read in K562 dataset and take the QuantSeq REV as the ground truth. 
+The assessment result was shown in the following picture.
+
+.. image:: ../image/reads1_length_assessment.png
+   :width: 600
+   :alt: reads1
+   :align: center
+
+
+
+
 run STAR
 ====================
-scTail require 3'scRNA-seq data (10x Genomics) with the length of reads 1 more than 100bp.
-That means the reads 1 should contain extra cDNA information except UMI and cell barcode.
+scTail require 3'scRNA-seq data (10x Genomics) with the length of first strand reads more than 70bp.
+That means the first strand reads should contain extra cDNA information except UMI and cell barcode.
 You can follow below code to run STAR. You should change several parameters according to your data.
 If your 10x genomics data is V2 chemistry, then your cellbarcode length is 16bp, UMI length is 10bp,Poly(dT)VN length is 32bp. The --clip5pNbases should set as 58. --soloCBstart --soloCBlen --soloUMIstart and --soloUMIlen should set as 1, 16, 17 and 10, respectively. You also should download the cellbarcode whitelist such as 737K-august-2016.txt.
 For the 10x genomics V3 chemistry, the UMI length is 12bp. You should change other parameters according to this change. You also should change cellbarcode whitelist to 3M-february-2018.txt. 
