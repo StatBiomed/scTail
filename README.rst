@@ -6,8 +6,8 @@ scTail for alternative PAS analysis in single cells
 .. |pypi| image:: https://badge.fury.io/py/scTail.svg
        :target: https://pypi.org/project/scTail/
 
-.. image:: https://zenodo.org/badge/497821671.svg
-      :target: https://zenodo.org/badge/latestdoi/497821671
+.. image:: https://zenodo.org/badge/731587359.svg
+      :target: https://doi.org/10.5281/zenodo.15760499
 
 
 Note
